@@ -17,6 +17,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
@@ -44,20 +47,13 @@ def handle_stream_frame(data):
         # Generate a unique filename for the image
         request_id = uuid.uuid4()
         unique_filename = f"image-extractor-service/uploaded_image/{request_id}.png"
+        local_filename = f"uploads/{request_id}.png"
 
-        # Convert the image to a file-like object
-        _, buffer = cv2.imencode('.png', image)
-        file_obj = BytesIO(buffer)
+        # Save the image to the uploads directory
+        cv2.imwrite(local_filename, image)
 
-        # Upload the image to S3
-        s3_url = upload_single_image(file_obj, object_name=unique_filename)
-
-        # Create a request record
-        create_request(custom_id=request_id, base_image=s3_url)
-
-        # Call the extract_objects function
-        model = YOLO(os.getenv('MODEL_PATH'))
-        extracted_objects = extract_objects(image_data, model, "cropped_image")
+        # Call the extract_objects function with the image path
+        extracted_objects = extract_objects(local_filename, "cropped_image", request_id)
 
         # Send the extracted objects back to the client
         emit('response', {'extracted_objects': extracted_objects})
