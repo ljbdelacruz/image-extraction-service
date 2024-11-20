@@ -5,6 +5,7 @@ import os
 from flasgger import Swagger
 from tools.image_extraction_yolo_function import extract_objects
 import uuid
+from flask_socketio import SocketIO, emit
 
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_request
