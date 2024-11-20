@@ -1,0 +1,22 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-py"
+}
+
+model Request {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  baseImage String @default("")
+  images    Image[]
+}
+
+model Image {
+  id                String   @id @default(uuid())
+  croppedImagePath  String
+  requestId         String
+  request           Request  @relation(fields: [requestId], references: [id])
+}
