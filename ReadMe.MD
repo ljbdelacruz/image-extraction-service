@@ -1,7 +1,6 @@
 ## Image Extraction Service
 
-
-
+> also check commands.sh for dependencies and stuff
 
 #### Setup
 
