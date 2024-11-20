@@ -55,6 +55,9 @@ def handle_stream_frame(data):
         # Call the extract_objects function with the image path
         extracted_objects = extract_objects(local_filename, "cropped_image", request_id)
 
+        if os.path.exists(local_filename):
+            os.remove(local_filename)
+
         # Send the extracted objects back to the client
         emit('response', {'extracted_objects': extracted_objects})
     except Exception as e:
