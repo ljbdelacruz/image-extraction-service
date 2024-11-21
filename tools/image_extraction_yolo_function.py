@@ -59,7 +59,7 @@ def extract_objects(image_path, output_dir='cropped_images', request_id = ''):
             extracted_objects.append({
                 'confidence': f'{confidence * 100:.2f}',
                 'label': model.names[class_id],
-                'cropped_image_path': cropped_image_path
+                's3_uri': s3_url
             })
 
     return extracted_objects

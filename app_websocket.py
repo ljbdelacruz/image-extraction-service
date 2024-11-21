@@ -15,7 +15,10 @@ from ultralytics import YOLO
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(
+    app, cors_allowed_origins="*",
+    max_http_buffer_size=50 * 1024 * 1024
+)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -59,10 +62,10 @@ def handle_stream_frame(data):
             os.remove(local_filename)
 
         # Send the extracted objects back to the client
-        emit('response', {'extracted_objects': extracted_objects})
+        emit('response', {'data': extracted_objects})
     except Exception as e:
         emit('response', {'error': str(e)})
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    socketio.run(app, debug=True, port=port)
+    socketio.run(app, debug=True, port=port, host='0.0.0.0')

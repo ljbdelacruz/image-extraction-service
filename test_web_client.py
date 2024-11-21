@@ -21,6 +21,7 @@ def send_frame(image_path):
     image = cv2.imread(image_path)
     _, buffer = cv2.imencode('.jpg', image)
     frame_data = base64.b64encode(buffer).decode('utf-8')
+    print(frame_data)
     sio.emit('stream_frame', {'frame': frame_data})
 
 try:
