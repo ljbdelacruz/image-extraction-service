@@ -20,6 +20,7 @@ def response(data):
 @sio.event
 def scan_result(data):
     print("Server response:", data)
+    sio.disconnect()
 
 def send_frame(image_path):
     image = cv2.imread(image_path)
