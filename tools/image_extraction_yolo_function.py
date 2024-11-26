@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 import uuid
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_image
+from src.service.gatherer_service import scanner_service
 
 load_dotenv()
 
 model = YOLO(os.getenv('MODEL_PATH'))
+s3_base_url=os.getenv('S3_BASE_URL')
 
-def extract_objects(image_path, output_dir='cropped_images', request_id = ''):
+def extract_objects(image_path, output_dir='cropped_images', request_id = '', access_token=''):
     """
     Extract objects from an image and save the cropped images.
 
@@ -46,7 +48,6 @@ def extract_objects(image_path, output_dir='cropped_images', request_id = ''):
             cropped_image = image[int(y1):int(y2), int(x1):int(x2)]
             unique_filename = f"{uuid.uuid4()}.png"
             cropped_image_path = os.path.join(output_dir, unique_filename)
-            # cv2.imwrite(cropped_image_path, cropped_image)
             _, buffer = cv2.imencode('.jpg', cropped_image)
             file_obj = BytesIO(buffer)
 
@@ -55,11 +56,14 @@ def extract_objects(image_path, output_dir='cropped_images', request_id = ''):
             s3_url = upload_single_image(file_obj, object_name=object_name)
 
             create_image(s3_url, request_id)
-
+            s3_url_key = s3_url.replace(s3_base_url, "")
             extracted_objects.append({
                 'confidence': f'{confidence * 100:.2f}',
                 'label': model.names[class_id],
-                's3_uri': s3_url
+                's3_uri': s3_url_key
             })
+
+            if os.path.exists(cropped_image_path):
+                os.remove(cropped_image_path)
 
     return extracted_objects

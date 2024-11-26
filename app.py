@@ -1,34 +1,23 @@
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, request, jsonify
-from flask_socketio import SocketIO, emit
-from flasgger import Swagger
 import os
-import uuid
-import asyncio
+from flasgger import Swagger
 from tools.image_extraction_yolo_function import extract_objects
+import uuid
+
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_request
-import base64
-import cv2
-import numpy as np
-from io import BytesIO
-from ultralytics import YOLO
 
 app = Flask(__name__)
 swagger = Swagger(app)
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
 
 @app.route('/extract_objects', methods=['POST'])
-async def extract_objects_endpoint():
+def extract_objects_endpoint():
     """
     Extract objects from an image using a YOLO model.
     ---
@@ -41,70 +30,43 @@ async def extract_objects_endpoint():
     responses:
       200:
         description: A list of extracted objects.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              cropped_image_path:
+                type: string
+      400:
+        description: No image file provided.
     """
-    try:
-        # Get the image from the request
-        image_file = request.files['image']
-        image_data = image_file.read()
-        image_array = np.frombuffer(image_data, np.uint8)
-        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file provided'}), 400
 
-        if image is None:
-            return jsonify({'error': 'Failed to decode image'}), 400
+    request_id = uuid.uuid4()
+    image_file = request.files['image']
+    unique_filename = f"image-extractor-service/uploaded_image/{request_id}.png"
+    local_filename = f"{request_id}.png"
 
-        # Generate a unique filename for the image
-        request_id = uuid.uuid4()
-        unique_filename = f"{UPLOAD_FOLDER}/{request_id}.png"
 
-        # Save the image to the uploads directory
-        cv2.imwrite(unique_filename, image)
+    image_path = os.path.join('uploads', local_filename)
+    os.makedirs('uploads', exist_ok=True)
+    image_file.save(image_path)
 
-        # Call the extract_objects function with the image path
-        model = YOLO(os.getenv('MODEL_PATH'))
-        extracted_objects = await extract_objects(unique_filename, model, "cropped_image")
+    s3_url = upload_single_image(image_file, object_name=unique_filename)
 
-        return jsonify({'extracted_objects': extracted_objects})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    create_request(custom_id=request_id, base_image=s3_url)
+    
+    # Call the extract_objects function
+    extracted_objects = extract_objects(image_path, "cropped_image", request_id)
 
-@socketio.on('connect')
-def handle_connect():
-    print('Client connected')
-    emit('response', {'message': 'Connected to server'})
+    if os.path.exists(image_path):
+        os.remove(image_path)
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('Client disconnected')
-
-@socketio.on('stream_frame')
-async def handle_stream_frame(data):
-    try:
-        # Decode the base64 image data
-        image_data = base64.b64decode(data['frame'])
-        image_array = np.frombuffer(image_data, np.uint8)
-        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-
-        if image is None:
-            raise ValueError("Failed to decode image")
-
-        # Generate a unique filename for the image
-        request_id = uuid.uuid4()
-        unique_filename = f"{UPLOAD_FOLDER}/{request_id}.png"
-
-        # Save the image to the uploads directory
-        cv2.imwrite(unique_filename, image)
-
-        # Call the extract_objects function with the image path
-        model = YOLO(os.getenv('MODEL_PATH'))
-        extracted_objects = await extract_objects(unique_filename, model, "cropped_image")
-
-        # Send the extracted objects back to the client
-        emit('response', {'extracted_objects': extracted_objects})
-    except Exception as e:
-        emit('response', {'error': str(e)})
+    return jsonify(extracted_objects)
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    import eventlet
-    eventlet.monkey_patch()
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    app.run(debug=True, port=port, host='0.0.0.0')
