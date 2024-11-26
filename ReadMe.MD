@@ -14,7 +14,13 @@ export FLASK_APP=app.py
 flask run
 
 
-#### Running Websocket 
-image-extraction-service % /usr/local/bin/python3 /Users/laineljohndelacruz/Desktop/Projects/mvg/tempproject/image-extraction-service/app_websocket.py
+#### Running Test Scripts for testing websocket communication
+/usr/local/bin/python3 /Users/laineljohndelacruz/Desktop/Projects/mvg/tempproject/image-extraction-service/test_web_client.py
+
+
+
+
+
+
 
 
