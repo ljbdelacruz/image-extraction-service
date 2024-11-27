@@ -8,15 +8,24 @@ docker-compose up -d
 prisma migrate dev
 
 
+##### installing dependencies
+```
+sh script/dependencies.sh
+```
+
 #### Running the app
 FLASK_APP=app.py
 export FLASK_APP=app.py
 flask run
 
+#### Testing
+> currently i can't get wscat or websocat to work had to use python client script 
+```
+# modify the python path if not the same location in the script/test.sh
 
-#### Running Test Scripts for testing websocket communication
-/usr/local/bin/python3 /Users/laineljohndelacruz/Desktop/Projects/mvg/tempproject/image-extraction-service/test_web_client.py
+sh script/test.sh
 
+```
 
 
 
