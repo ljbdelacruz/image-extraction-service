@@ -10,10 +10,6 @@
 
 /usr/local/bin/python3.9 test_web_client.py
 
-
-
-
-
 # running flask app
 export FLASK_APP=app.py
 set FLASK_APP=app.py
