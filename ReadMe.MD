@@ -17,6 +17,10 @@ sh script/dependencies.sh
 FLASK_APP=app.py
 export FLASK_APP=app.py
 flask run
+> or
+```
+sh script/run.sh
+```
 
 #### Testing
 > currently i can't get wscat or websocat to work had to use python client script 
