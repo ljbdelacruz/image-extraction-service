@@ -59,7 +59,6 @@ def extract_objects(image_path, output_dir='cropped_images', request_id = '', ac
             s3_url_key = s3_url.replace(s3_base_url, "")
             extracted_objects.append({
                 'confidence': f'{confidence * 100:.2f}',
-                'label': model.names[class_id],
                 's3_uri': s3_url_key
             })
 
