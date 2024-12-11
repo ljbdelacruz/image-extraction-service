@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 'image-extraction-service'
+  namespace: 'image-extraction-service'
+spec:
+  selector:
+    matchLabels:
+      app: 'image-extraction-service'
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: 'image-extraction-service'
+    spec:
+      containers:
+        - image: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service:v0.0.1-7d5416ac
+          imagePullPolicy: Always
+          name: 'image-extraction-service'
+          env:
+            - name: ENVIRONMENT
+              value: dev
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: helixworlds-image-extraction-service-secrets
+                  key: DATABASE_URL
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: helixworlds-image-extraction-service-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: helixworlds-image-extraction-service-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_BUCKET
+              value: app-d-helixworlds-content
+            - name: MODEL_PATH
+              value: models/yolo11n.pt
+            - name: S3_BASE_URL
+              value: https://app-p-helixworlds-content.s3.amazonaws.com/
+            - name: GATHERER_URL
+              value: http://192.168.100.39:4000
+            - name: AUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: helixworlds-image-extraction-service-secrets
+                  key: AUTH_CLIENT_ID
+            - name: AUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: helixworlds-image-extraction-service-secrets
+                  key: AUTH_CLIENT_SECRET
+          volumeMounts:
+            - name: 'helixworlds-image-extraction-service-secrets'
+              mountPath: '/mnt/secrets-store'
+              readOnly: true
+      volumes:
+        - name: helixworlds-image-extraction-service-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: helixworlds-image-extraction-service-secrets
