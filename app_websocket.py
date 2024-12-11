@@ -10,12 +10,14 @@ from src.service.request_service import create_request
 import base64
 import cv2
 import numpy as np
-from io import BytesIO
 from ultralytics import YOLO
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(
+    app, cors_allowed_origins="*",
+    max_http_buffer_size=50 * 1024 * 1024
+)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -37,6 +39,7 @@ def handle_disconnect():
 def handle_stream_frame(data):
     try:
         # Decode the base64 image data
+        access_token = data["access_token"]
         image_data = base64.b64decode(data['frame'])
         image_array = np.frombuffer(image_data, np.uint8)
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
@@ -51,15 +54,26 @@ def handle_stream_frame(data):
 
         # Save the image to the uploads directory
         cv2.imwrite(local_filename, image)
+        # s3_url = upload_single_image(image_data, object_name=unique_filename)
+        create_request(custom_id=request_id, base_image="")
 
         # Call the extract_objects function with the image path
-        extracted_objects = extract_objects(local_filename, "cropped_image", request_id)
+        extracted_objects = extract_objects(local_filename, "cropped_image", request_id, access_token=access_token)
 
-        # Send the extracted objects back to the client
-        emit('response', {'extracted_objects': extracted_objects})
+        if os.path.exists(local_filename):
+            os.remove(local_filename)
+        
+        if(extracted_objects):
+            print(extracted_objects[0]);
+            emit('response', extracted_objects[0])
+        else:
+            print('no object found')
+            emit('error', 'no object detected')
+        # # Send the extracted objects back to the client
+        # emit('response', extracted_objects[0])
     except Exception as e:
         emit('response', {'error': str(e)})
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    socketio.run(app, debug=True, port=port)
+    socketio.run(app, debug=True, port=port, host='0.0.0.0')
