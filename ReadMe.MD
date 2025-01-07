@@ -22,14 +22,20 @@ flask run
 sh script/run.sh
 ```
 
+#### Test Docs
+> to view swagger docs 
+```
+http://localhost:5000/api/#/
+```
+
 #### Testing
 > currently i can't get wscat or websocat to work had to use python client script 
 ```
 # modify the python path if not the same location in the script/test.sh
 
 sh script/test.sh
-
 ```
+
 
 
 
