@@ -8,6 +8,8 @@ import uuid
 from PIL import Image, ImageOps
 import io
 from rembg import remove
+from io import BytesIO
+import cv2
 
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_request
@@ -72,8 +74,18 @@ def remove_image_bg():
     image_id = uuid.uuid4()
     output_path = os.path.join('cropped_image', f"{image_id}.png")
     final_img.save(output_path, format='PNG')
+    unique_filename = f"image-extractor-service/background_removed/{image_id}.png"
 
-    return jsonify({'message': 'Image processed and saved successfully', 'path': output_path}), 200
+    image = cv2.imread(output_path)
+    _, buffer = cv2.imencode('.png', image)
+    file_obj = io.BytesIO(buffer)
+
+    s3_url = upload_single_image(file_obj, object_name=unique_filename)
+
+    if os.path.exists(output_path):
+      os.remove(output_path)
+
+    return jsonify({'message': 'Image processed and saved successfully', 'path': s3_url}), 200
 
 @app.route('/extract_objects', methods=['POST'])
 def extract_objects_endpoint():
@@ -113,9 +125,7 @@ def extract_objects_endpoint():
     image_path = os.path.join('uploads', local_filename)
     os.makedirs('uploads', exist_ok=True)
     image_file.save(image_path)
-
     s3_url = upload_single_image(image_file, object_name=unique_filename)
-
     create_request(custom_id=request_id, base_image=s3_url)
     
     # Call the extract_objects function
