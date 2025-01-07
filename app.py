@@ -5,16 +5,75 @@ import os
 from flasgger import Swagger
 from tools.image_extraction_yolo_function import extract_objects
 import uuid
+from PIL import Image, ImageOps
+import io
+from rembg import remove
 
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_request
 
+# Create a dummy image to trigger the model download
+dummy_image = Image.new("RGBA", (1, 1), (255, 255, 255, 255))
+output = remove(dummy_image)
+
 app = Flask(__name__)
-swagger = Swagger(app)
+swagger = Swagger(app, config={
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'apispec_1',
+            "route": '/api/swagger.json',
+            "rule_filter": lambda rule: True,  # all in
+            "model_filter": lambda tag: True,  # all in
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/api/"
+})
 
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
+
+@app.route('/remove_image_bg', methods=['POST'])
+def remove_image_bg():
+    """
+    Remove Background from detected image and replace it with green background.
+    ---
+    parameters:
+      - name: image
+        in: formData
+        type: file
+        required: true
+        description: The image file to upload.
+    responses:
+      200:
+        description: The image with the background removed and replaced with green.
+    """
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file provided'}), 400
+
+    file = request.files['image']
+    img = Image.open(file.stream)
+    img = img.convert("RGBA")  # Ensure image is in RGBA format
+    output = remove(img)
+
+    # Create a green background
+    green_bg = Image.new("RGBA", output.size, (0, 255, 0, 255))
+
+    # Composite the image with the green background
+    final_img = Image.alpha_composite(green_bg, output)
+
+    # Convert the final image to bytes
+    img_byte_arr = io.BytesIO()
+    final_img.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
+    image_id = uuid.uuid4()
+    output_path = os.path.join('cropped_image', f"{image_id}.png")
+    final_img.save(output_path, format='PNG')
+
+    return jsonify({'message': 'Image processed and saved successfully', 'path': output_path}), 200
 
 @app.route('/extract_objects', methods=['POST'])
 def extract_objects_endpoint():
