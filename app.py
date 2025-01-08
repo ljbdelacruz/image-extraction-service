@@ -13,6 +13,7 @@ import cv2
 
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_request
+from src.service.image_service import image_background_remover
 
 # Create a dummy image to trigger the model download
 dummy_image = Image.new("RGBA", (1, 1), (255, 255, 255, 255))
@@ -38,6 +39,84 @@ swagger = Swagger(app, config={
 def hello_world():
     return 'Hello, World!'
 
+
+@app.route('/extract_frames_and_remove_bg', methods=['POST'])
+def extract_frames_and_remove_bg():
+    """
+    Extract frames from video every 2 seconds, remove background from each frame, and save as images.
+    ---
+    parameters:
+      - name: video
+        in: formData
+        type: file
+        required: true
+        description: The video file to upload.
+      - name: s3_directory
+        in: formData
+        type: string
+        required: true
+        description: The s3_directory prefix for the processed frames.
+    responses:
+      200:
+        description: The frames with the background removed and saved as images.
+    """
+    if 'video' not in request.files:
+        return jsonify({'error': 'No video file provided'}), 400
+
+    if 's3_directory' not in request.form:
+        return jsonify({'error': 'No unique filename provided'}), 400
+
+    file = request.files['video']
+    s3_directory = request.form['s3_directory']
+    image_id = uuid.uuid4()
+    file_extension = os.path.splitext(file.filename)[1]
+    input_path = os.path.join('processed_video', f"{image_id}.{file_extension}")
+    file.save(input_path)
+
+    # Open the video file
+    cap = cv2.VideoCapture(input_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_interval = int(fps * 2)  # Capture one frame every 2 seconds
+    frame_count = 0
+    processed_frame_count = 0
+    s3_urls = []
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Process every nth frame
+        if frame_count % frame_interval == 0:
+            # Convert frame to PIL image
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(frame_rgb)
+
+            file_obj, unique_filename, output_path = image_background_remover(
+                pil_img, 
+                s3_directory,
+                # "image-extractor-service/background_removed",                                                               
+                "processed_video")
+
+            s3_url = upload_single_image(file_obj, object_name=unique_filename)
+
+            # Append the output path to the list
+            s3_urls.append(s3_url)
+
+            if os.path.exists(output_path):
+              os.remove(output_path)
+
+            processed_frame_count += 1
+
+        frame_count += 1
+
+    cap.release()
+
+    if os.path.exists(input_path):
+      os.remove(input_path)
+
+    return jsonify({'message': 'Frames processed and saved successfully', 'frame_count': processed_frame_count, 'uploaded_images': s3_urls}), 200
+
 @app.route('/remove_image_bg', methods=['POST'])
 def remove_image_bg():
     """
@@ -49,39 +128,27 @@ def remove_image_bg():
         type: file
         required: true
         description: The image file to upload.
+      - name: s3_directory
+        in: formData
+        type: string
+        required: true
+        description: The s3_directory prefix for the processed image.
     responses:
       200:
         description: The image with the background removed and replaced with green.
     """
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'}), 400
+    if 's3_directory' not in request.form:
+        return jsonify({'error': 'No unique filename provided'}), 400
 
     file = request.files['image']
+    s3_directory = request.form['s3_directory']
     img = Image.open(file.stream)
     img = img.convert("RGBA")  # Ensure image is in RGBA format
-    output = remove(img)
 
-    # Create a green background
-    green_bg = Image.new("RGBA", output.size, (0, 255, 0, 255))
-
-    # Composite the image with the green background
-    final_img = Image.alpha_composite(green_bg, output)
-
-    # Convert the final image to bytes
-    img_byte_arr = io.BytesIO()
-    final_img.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-    image_id = uuid.uuid4()
-    output_path = os.path.join('cropped_image', f"{image_id}.png")
-    final_img.save(output_path, format='PNG')
-    unique_filename = f"image-extractor-service/background_removed/{image_id}.png"
-
-    image = cv2.imread(output_path)
-    _, buffer = cv2.imencode('.png', image)
-    file_obj = io.BytesIO(buffer)
-
+    file_obj, unique_filename, output_path = image_background_remover(img, s3_directory, "cropped_image")
     s3_url = upload_single_image(file_obj, object_name=unique_filename)
-
     if os.path.exists(output_path):
       os.remove(output_path)
 
