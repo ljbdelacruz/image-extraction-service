@@ -1,0 +1,13 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+  - pod-autoscaler.yaml
+  - namespace.yaml
+  - secret-provider-class.yaml
+  - service-account.yaml
+# bug (feature?) in kustomize where if you specify the namespace in the manifest the patch files won't match
+# https://github.com/kubernetes-sigs/kustomize/issues/1351e
+# for now specify it in here and the production patch kustomize.yaml
+namespace: image-extraction-service
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

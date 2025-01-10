@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 'image-extraction-service'
+  namespace: 'image-extraction-service'
+spec:
+  selector:
+    matchLabels:
+      app: 'image-extraction-service'
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: 'image-extraction-service'
+    spec:
+      serviceAccountName: helixworlds-image-extraction-service
+      containers:
+        - image: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service:v0.0.1-7d5416ac
+          imagePullPolicy: Always
+          name: 'image-extraction-service'
+          resources:
+            requests:
+              cpu: '250m'
+          ports:
+            - containerPort: 5000
+              name: 'image-extraction-service'
+          env:
+            - name: PORT
+              value: '5000'

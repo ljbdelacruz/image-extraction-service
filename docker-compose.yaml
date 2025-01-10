@@ -6,7 +6,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=image-extration-service
+      - POSTGRES_DB=image-extraction-service
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
@@ -24,7 +24,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - 8001:8080
+      - 8003:8082
 
 volumes:
   db_data:
