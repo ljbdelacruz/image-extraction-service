@@ -80,6 +80,7 @@ def extract_frames_and_remove_bg():
     frame_count = 0
     processed_frame_count = 0
     s3_urls = []
+    file_keys = []
 
     while cap.isOpened():
         ret, frame = cap.read()
@@ -98,10 +99,11 @@ def extract_frames_and_remove_bg():
                 # "image-extractor-service/background_removed",                                                               
                 "processed_video")
 
-            s3_url = upload_single_image(file_obj, object_name=unique_filename)
+            s3_url, file_key = upload_single_image(file_obj, object_name=unique_filename)
 
             # Append the output path to the list
             s3_urls.append(s3_url)
+            file_keys.append(file_key)
 
             if os.path.exists(output_path):
               os.remove(output_path)
@@ -115,7 +117,7 @@ def extract_frames_and_remove_bg():
     if os.path.exists(input_path):
       os.remove(input_path)
 
-    return jsonify({'message': 'Frames processed and saved successfully', 'frame_count': processed_frame_count, 'uploaded_images': s3_urls}), 200
+    return jsonify({'message': 'Frames processed and saved successfully', 'frame_count': processed_frame_count, 's3': s3_urls, 'file_keys': file_keys}), 200
 
 @app.route('/remove_image_bg', methods=['POST'])
 def remove_image_bg():
@@ -148,11 +150,11 @@ def remove_image_bg():
     img = img.convert("RGBA")  # Ensure image is in RGBA format
 
     file_obj, unique_filename, output_path = image_background_remover(img, s3_directory, "cropped_image")
-    s3_url = upload_single_image(file_obj, object_name=unique_filename)
+    s3_url, fileKey = upload_single_image(file_obj, object_name=unique_filename)
     if os.path.exists(output_path):
       os.remove(output_path)
 
-    return jsonify({'message': 'Image processed and saved successfully', 'path': s3_url}), 200
+    return jsonify({'message': 'Image processed and saved successfully', 'path': fileKey, 's3': s3_url}), 200
 
 @app.route('/extract_objects', methods=['POST'])
 def extract_objects_endpoint():

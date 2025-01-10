@@ -34,7 +34,8 @@ def upload_single_image(file_obj, bucket_name=AWS_BUCKET_NAME, object_name=None)
         )
         status_code = result['ResponseMetadata']['HTTPStatusCode']
         url = f"https://{bucket_name}.s3.amazonaws.com/{object_name}"
-        return url
+        fileKey=object_name
+        return url, fileKey
     except FileNotFoundError as e:
         print(f"FileNotFoundError: {e}")
         raise
