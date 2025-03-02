@@ -13,9 +13,9 @@ spec:
       labels:
         app: 'image-extraction-service'
     spec:
-      serviceAccountName: helixworlds-image-extraction-service
+      serviceAccountName: myapp-image-extraction-service
       containers:
-        - image: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service:v0.0.1-7d5416ac
+        - image: 
           imagePullPolicy: Always
           name: 'image-extraction-service'
           resources:

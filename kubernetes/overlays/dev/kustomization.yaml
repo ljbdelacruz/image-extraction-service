@@ -8,9 +8,9 @@ patchesStrategicMerge:
   - ./service-account.yaml
 namespace: image-extraction-service
 images:
-  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helix-dash
-    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helix-dash
+  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-dash
+    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-dash
     newTag: 0.1.1-b0790b3
-  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service
-    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service
+  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-image-extraction-service
+    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-image-extraction-service
     newTag: 0.2.181-5bdbafe

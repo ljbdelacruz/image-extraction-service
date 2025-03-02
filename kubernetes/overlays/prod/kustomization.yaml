@@ -14,6 +14,6 @@ images:
   - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helix-dash
     newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helix-dash
     newTag: v0.0.1-22cfca64
-  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service
-    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helixworlds-image-extraction-service
+  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-image-extraction-service
+    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-image-extraction-service
     newTag: 0.2.25-fb0a545
