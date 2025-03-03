@@ -27,6 +27,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Generate Prisma Client
+        run: |
+          npx prisma generate
+
+      - name: Set environment variables
+        run: |
+          echo "AWS_BUCKET_NAME=laineltestbucket" >> $GITHUB_ENV
+
       - name: Run unit tests
         run: |
           chmod +x script/unittest.sh
