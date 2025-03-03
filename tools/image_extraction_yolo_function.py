@@ -11,9 +11,9 @@ from src.service.gatherer_service import scanner_service
 load_dotenv()
 
 model = YOLO(os.getenv('MODEL_PATH'))
-s3_base_url=os.getenv('S3_BASE_URL')
+s3_base_url = os.getenv('S3_BASE_URL')
 
-def extract_objects(image_path, output_dir='cropped_images', request_id = '', access_token=''):
+def extract_objects(image_path, output_dir='cropped_images', request_id='', access_token=''):
     """
     Extract objects from an image and save the cropped images.
 
@@ -53,7 +53,10 @@ def extract_objects(image_path, output_dir='cropped_images', request_id = '', ac
 
             object_name = f"image-extractor-service/cropped_images/{unique_filename}"
 
-            s3_url = upload_single_image(file_obj, object_name=object_name)
+            s3_url, file_key = upload_single_image(file_obj, object_name=object_name)
+
+            # Ensure s3_url is a string
+            s3_url = s3_url[0] if isinstance(s3_url, tuple) else s3_url
 
             create_image(s3_url, request_id)
             s3_url_key = s3_url.replace(s3_base_url, "")
