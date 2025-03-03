@@ -1,8 +1,13 @@
 #!/bin/bash
 
+PYTHON_PATH=$(which python3)
+
+# make copyof env file
+cp .env.example .env
+
 # install dependencies
-pip install six opencv-python cvlib gtts ultralytics flask prisma flasgger python-dotenv boto3 flask-socketio eventlet python-socketio rembg onnxruntime
+PYTHON_PATH -m pip install --no-cache-dir -r requirements.txt
 
-
-'/usr/local/bin/python3.9' -m pip show python-socketio
-
+# migrate database
+docker-compose up -d
+prisma migrate dev

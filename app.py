@@ -114,8 +114,8 @@ def extract_frames_and_remove_bg():
 
     cap.release()
 
-    if os.path.exists(input_path):
-      os.remove(input_path)
+    # if os.path.exists(input_path):
+    #   os.remove(input_path)
 
     return jsonify({'message': 'Frames processed and saved successfully', 'frame_count': processed_frame_count, 's3': s3_urls, 'file_keys': file_keys}), 200
 
@@ -134,7 +134,7 @@ def remove_image_bg():
         in: formData
         type: string
         required: true
-        description: The s3_directory prefix for the processed image.
+        description: The s3_directory prefix for the processed image. ex. 
     responses:
       200:
         description: The image with the background removed and replaced with green.

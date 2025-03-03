@@ -6,8 +6,10 @@ import os
 import cv2
 
 def image_background_remover(file, path, output_dir):
-    # img = Image.open(file.stream)
-    # img = img.convert("RGBA")  # Ensure image is in RGBA format
+    # Ensure the output directory exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     output = remove(file)
     # Create a green background
     green_bg = Image.new("RGBA", output.size, (0, 255, 0, 255))

@@ -4,11 +4,7 @@
 
 #### Setup
 
-docker-compose up -d
-prisma migrate dev
-
-
-##### installing dependencies
+##### installing dependencies and database setup
 ```
 sh script/dependencies.sh
 ```
@@ -21,6 +17,8 @@ flask run
 ```
 sh script/run.sh
 ```
+
+> NOTE: please make sure to setup your .env file AWS Access key and S3 Bucket
 
 #### Test Docs
 > to view swagger docs 

@@ -1,4 +1,5 @@
 #!/bin/bash
 
+PYTHON_PATH=$(which python3)
 
-/usr/local/bin/python3.9 test_web_client.py
+PYTHON_PATH test_web_client.py

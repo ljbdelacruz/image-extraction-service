@@ -11,5 +11,5 @@ boto3==1.35.61
 flask-socketio==5.4.1
 eventlet==0.38.0
 python-socketio==5.11.4
-rembg==2.0.25
-onnxruntime==1.10.0
+rembg==2.0.63
+onnxruntime==1.20.1
