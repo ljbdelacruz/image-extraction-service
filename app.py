@@ -71,6 +71,11 @@ def extract_frames_and_remove_bg():
     image_id = uuid.uuid4()
     file_extension = os.path.splitext(file.filename)[1]
     input_path = os.path.join('processed_video', f"{image_id}.{file_extension}")
+
+    # Ensure the directory exists
+    if not os.path.exists('processed_video'):
+        os.makedirs('processed_video')
+
     file.save(input_path)
 
     # Open the video file
@@ -96,7 +101,6 @@ def extract_frames_and_remove_bg():
             file_obj, unique_filename, output_path = image_background_remover(
                 pil_img, 
                 s3_directory,
-                # "image-extractor-service/background_removed",                                                               
                 "processed_video")
 
             s3_url, file_key = upload_single_image(file_obj, object_name=unique_filename)
@@ -106,7 +110,7 @@ def extract_frames_and_remove_bg():
             file_keys.append(file_key)
 
             if os.path.exists(output_path):
-              os.remove(output_path)
+                os.remove(output_path)
 
             processed_frame_count += 1
 
@@ -114,8 +118,8 @@ def extract_frames_and_remove_bg():
 
     cap.release()
 
-    # if os.path.exists(input_path):
-    #   os.remove(input_path)
+    if os.path.exists(input_path):
+        os.remove(input_path)
 
     return jsonify({'message': 'Frames processed and saved successfully', 'frame_count': processed_frame_count, 's3': s3_urls, 'file_keys': file_keys}), 200
 
@@ -134,7 +138,7 @@ def remove_image_bg():
         in: formData
         type: string
         required: true
-        description: The s3_directory prefix for the processed image. ex. 
+        description: The s3_directory prefix for the processed image.
     responses:
       200:
         description: The image with the background removed and replaced with green.
@@ -152,7 +156,7 @@ def remove_image_bg():
     file_obj, unique_filename, output_path = image_background_remover(img, s3_directory, "cropped_image")
     s3_url, fileKey = upload_single_image(file_obj, object_name=unique_filename)
     if os.path.exists(output_path):
-      os.remove(output_path)
+        os.remove(output_path)
 
     return jsonify({'message': 'Image processed and saved successfully', 'path': fileKey, 's3': s3_url}), 200
 
@@ -190,9 +194,12 @@ def extract_objects_endpoint():
     unique_filename = f"image-extractor-service/uploaded_image/{request_id}.png"
     local_filename = f"{request_id}.png"
 
-
     image_path = os.path.join('uploads', local_filename)
-    os.makedirs('uploads', exist_ok=True)
+
+    # Ensure the directory exists
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
+
     image_file.save(image_path)
     s3_url = upload_single_image(image_file, object_name=unique_filename)
     create_request(custom_id=request_id, base_image=s3_url)
