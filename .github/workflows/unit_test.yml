@@ -37,7 +37,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "AWS_BUCKET_NAME=laineltestbucket" >> $GITHUB_ENV
+          echo "AWS_BUCKET=laineltestbucket" >> $GITHUB_ENV
 
       - name: Run unit tests
         run: |
