@@ -13,7 +13,9 @@ sh script/dependencies.sh
 FLASK_APP=app.py
 export FLASK_APP=app.py
 flask run
+
 > or
+
 ```
 sh script/run.sh
 ```
@@ -22,6 +24,7 @@ sh script/run.sh
 
 #### Test Docs
 > to view swagger docs 
+
 ```
 http://localhost:5000/api/#/
 ```

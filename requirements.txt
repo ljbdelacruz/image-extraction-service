@@ -13,3 +13,4 @@ eventlet==0.38.0
 python-socketio==5.11.4
 rembg==2.0.63
 onnxruntime==1.20.1
+confluent_kafka==2.1.1
