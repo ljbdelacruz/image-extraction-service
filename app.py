@@ -11,6 +11,9 @@ from rembg import remove
 from io import BytesIO
 import cv2
 import logging
+import threading
+from kafka.kafka_producer import produce_message
+from kafka.kafka_consumer import consume_messages
 
 from src.service.upload_s3 import upload_single_image
 from src.service.request_service import create_request
@@ -168,6 +171,10 @@ def remove_image_bg():
         if os.path.exists(output_path):
             os.remove(output_path)
 
+        # Produce a message to Kafka
+        message = {'key': str(uuid.uuid4()), 'value': s3_url}
+        produce_message('image_processed', message)
+
         return jsonify({'message': 'Image processed and saved successfully', 'path': fileKey, 's3': s3_url}), 200
     except Exception as e:
         logger.error(f"Error in remove_image_bg: {e}")
@@ -230,5 +237,9 @@ def extract_objects_endpoint():
         return jsonify({'error': 'An error occurred while extracting objects from the image'}), 500
 
 if __name__ == '__main__':
+    # Start Kafka consumer in a separate thread
+    consumer_thread = threading.Thread(target=consume_messages, args=('image_processed',))
+    consumer_thread.start()
+
     port = int(os.getenv('PORT', 5000))
     app.run(debug=True, port=port, host='0.0.0.0')
