@@ -1,3 +1,4 @@
 .env
 /uploads
 /cropped_image
+train/

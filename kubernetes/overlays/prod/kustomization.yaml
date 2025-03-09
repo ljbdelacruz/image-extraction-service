@@ -9,10 +9,10 @@ patchesStrategicMerge:
   - ./pod-autoscaler.yaml
 namespace: gatherer
 images:
-  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/coconft-api
-    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/coconft-api
-  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helix-dash
-    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/helix-dash
+  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-api
+    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-api
+  - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp
+    newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp
     newTag: v0.0.1-22cfca64
   - name: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-image-extraction-service
     newName: 979222079345.dkr.ecr.us-east-1.amazonaws.com/myapp-image-extraction-service
